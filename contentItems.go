@@ -13,30 +13,30 @@ import (
 )
 
 type ContentItem struct {
-	hash         string
-	filename     string
-	contenttypes []string
+	Hash         string
+	Filename     string
+	Contenttypes []string
 }
 
 func GenerateFileTypesAndHash(r io.Reader) ContentItem {
 	signature, err := ioutil.ReadAll(io.LimitReader(r, 512))
 	if err != nil {
 		return ContentItem{
-			hash:         "",
-			contenttypes: []string{err.Error()},
+			Hash:         "",
+			Contenttypes: []string{err.Error()},
 		}
 	}
 	hash := md5.New() // fast & good enough
 	if _, err := io.Copy(hash, bytes.NewReader(signature)); err != nil {
 		return ContentItem{
-			hash:         "",
-			contenttypes: []string{err.Error()},
+			Hash:         "",
+			Contenttypes: []string{err.Error()},
 		}
 	}
 	if _, err := io.Copy(hash, r); err != nil {
 		return ContentItem{
-			hash:         "",
-			contenttypes: []string{err.Error()},
+			Hash:         "",
+			Contenttypes: []string{err.Error()},
 		}
 	}
 	contentTypes := []string{}
@@ -59,7 +59,7 @@ func GenerateFileTypesAndHash(r io.Reader) ContentItem {
 		}
 	}
 	return ContentItem{
-		hash:         fmt.Sprintf("%x", hash.Sum(nil)),
-		contenttypes: contentTypes,
+		Hash:         fmt.Sprintf("%x", hash.Sum(nil)),
+		Contenttypes: contentTypes,
 	}
 }
