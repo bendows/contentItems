@@ -13,6 +13,7 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
+// bytes, _ := ioutil.ReadAll(r) //All bytes are now in memory
 //	https://stackoverflow.com/questions/25671305/golang-io-copy-twice-on-the-request-body
 //
 //	this works for either a reader or writer,
