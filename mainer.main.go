@@ -13,6 +13,28 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
+// func hashAndSend(r io.Reader) {
+// 	w := sha256.New()
+// 	//any reads from tee will read from r and write to w
+// 	tee := io.TeeReader(r, w)
+// 	sendReader(tee)
+// 	sha := hex.EncodeToString(w.Sum(nil))
+// 	fmt.Println(sha)
+// }
+
+//sendReader sends the contents of an io.Reader to stdout using a 256 byte buffer
+// func sendReader(data io.Reader) {
+// 	buff := make([]byte, 256)
+// 	for {
+// 		_, err := data.Read(buff)
+// 		if err == io.EOF {
+// 			break
+// 		}
+// 		fmt.Print(string(buff))
+// 	}
+// 	fmt.Println("")
+// }
+
 // bytes, _ := ioutil.ReadAll(r) //All bytes are now in memory
 //	https://stackoverflow.com/questions/25671305/golang-io-copy-twice-on-the-request-body
 //
