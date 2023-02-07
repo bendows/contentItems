@@ -20,7 +20,7 @@ type ContentItem struct {
 	Contenttypes []string
 }
 
-func CopyToFile(r io.Reader, filename, directory string) (i int, thefilename string) {
+func UploadFile(r io.Reader, filename, directory string) (i int, thefilename string) {
 	diskFileName := ""
 	var f *os.File
 	var err error

@@ -36,6 +36,7 @@ import (
 // }
 
 // bytes, _ := ioutil.ReadAll(r) //All bytes are now in memory
+//
 //	https://stackoverflow.com/questions/25671305/golang-io-copy-twice-on-the-request-body
 //
 //	this works for either a reader or writer,
@@ -50,17 +51,23 @@ type Hasher struct {
 
 func (h *Hasher) Write(p []byte) (n int, err error) {
 	n, err = h.Writer.Write(p)
-	logger.Loginfo.Printf("Hasher.Write [%d]\n", n)
+	if err != nil {
+		return n, err
+	}
+	logger.Loginfo.Printf("Hasher.Write(p) [%d]\n", n)
 	h.Hash.Write(p)
 	h.Size += uint64(n)
-	return
+	return n, err
 }
 
 func (h *Hasher) Read(p []byte) (n int, err error) {
 	n, err = h.Reader.Read(p)
-	logger.Loginfo.Printf("Hasher.Read [%d]\n", n)
+	if err != nil {
+		return n, err
+	}
+	logger.Loginfo.Printf("Hasher.Read(p) [%d]\n", n)
 	h.Hash.Write(p[:n]) //on error n is gonna be 0 so this is still safe.
-	return
+	return n, err
 }
 
 func (h *Hasher) Sum() string {
@@ -75,7 +82,10 @@ type UploadHandle struct {
 func (h *UploadHandle) Read() (io.Reader, string, int64, error) {
 	logger.Loginfo.Printf("Read():)\n")
 	var b bytes.Buffer
-	hashedReader := &Hasher{Reader: h.Contents, Hash: sha1.New()}
+	hashedReader := &Hasher{
+		Reader: h.Contents,
+		Hash:   sha1.New(),
+	}
 	n, err := io.Copy(&b, hashedReader)
 	if err != nil {
 		return nil, "", 0, err
@@ -102,6 +112,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	b2, err := os.ReadFile("/etc/group")
+	if err != nil {
+		log.Fatal(err)
+	}
 	// convert byte slice to io.Reader
 	h.Contents = bytes.NewReader(b)
 	_, cnt, d, err := h.Read()
@@ -109,12 +123,13 @@ func main() {
 		log.Fatal()
 	}
 	fmt.Printf("\nhash[%s]\nread-count[%d]\nerr[%s]\n", cnt, d, err)
-	h.Contents2 = bytes.NewReader(b)
+	// convert byte slice to io.Reader
+	h.Contents2 = bytes.NewReader(b2)
 	// updated version based on @Dustin's comment since I complete
 	_, cnt, d, err = h.ReadnewTee()
 	if err != nil {
 		log.Fatal()
 	}
-	fmt.Printf("\nhash[%s]\nread-count[%d]\nerr[%s]\n", cnt, d, err)
+	fmt.Printf("\nhash [%s]\nread-count [%d]\nerr [%+v]\n", cnt, d, err)
 }
 // https://golang.cafe/blog/golang-convert-byte-slice-to-io-reader.html
