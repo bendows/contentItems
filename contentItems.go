@@ -21,8 +21,9 @@ type ContentItem struct {
 	Contenttypes []string
 }
 
-func UploadFile(r io.Reader, filename, directory string) (i int, thefilename string) {
+func UploadFile(r io.Reader, filename, directory string) (int, []string, string, error) {
 	diskFileName := ""
+	headers := []string{}
 	var f *os.File
 	var err error
 	for {
@@ -45,22 +46,22 @@ func UploadFile(r io.Reader, filename, directory string) (i int, thefilename str
 		break
 	}
 	if len(diskFileName) < 1 {
-		return 0, ""
+		return 0, headers, "", err
 	}
 	fileContents, err := ioutil.ReadAll(r)
 	if err != nil {
-		return 0, ""
+		return 0, headers, "", err
 	}
 	// filewriter := bufio.NewWriter(f)
 	// _, err = filewriter.Write(fileContents)
 	var n int
 	n, err = f.Write(fileContents)
 	if err != nil {
-		return 0, ""
+		return 0, headers, "", err
 	}
-	headers, err := Hashandcontents(bytes.NewReader(fileContents))
+	headers, err = Hashandcontents(bytes.NewReader(fileContents))
 	logger.Loginfo.Printf("[%d] [%s] [%+v] file created\n", n, diskFileName, headers)
-	return n, diskFileName
+	return n, headers, diskFileName, err
 	// s, err := filewriter.Write(r)
 	// if err != nil || s < 1 {
 	// 	err = f.Close()
