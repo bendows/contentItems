@@ -1,4 +1,4 @@
-package main
+package ContentItems
 
 import (
 	"bytes"
@@ -132,4 +132,5 @@ func main() {
 	}
 	fmt.Printf("\nhash [%s]\nread-count [%d]\nerr [%+v]\n", cnt, d, err)
 }
+
 // https://golang.cafe/blog/golang-convert-byte-slice-to-io-reader.html

@@ -3,6 +3,7 @@ package ContentItems
 import (
 	"bytes"
 	"crypto/md5"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -57,7 +58,8 @@ func UploadFile(r io.Reader, filename, directory string) (i int, thefilename str
 	if err != nil {
 		return 0, ""
 	}
-	logger.Loginfo.Printf("[%d] [%s] file created\n", n, diskFileName)
+	headers, err := Hashandcontents(bytes.NewReader(fileContents))
+	logger.Loginfo.Printf("[%d] [%s] [%+v] file created\n", n, diskFileName, headers)
 	return n, diskFileName
 	// s, err := filewriter.Write(r)
 	// if err != nil || s < 1 {
@@ -87,6 +89,40 @@ func UploadFile(r io.Reader, filename, directory string) (i int, thefilename str
 	// 	logger.Logerror.Printf("[%s] [%s] [%v]\n", key, name, err)
 	// 	return file, err
 	// }
+}
+
+func Hashandcontents(r io.Reader) ([]string, error) {
+	logger.Loginfo.Printf("Read():)\n")
+	var b bytes.Buffer
+	contentTypes := []string{}
+	hashedReader := &Hasher{
+		Reader: r,
+		Hash:   sha1.New(),
+	}
+	n, err := io.Copy(&b, hashedReader)
+	if err != nil {
+		return contentTypes, err
+	}
+	logger.Loginfo.Printf("Read():) [%d]\n", n)
+	meta := http.DetectContentType(b.Bytes())
+	logger.Loginfo.Printf("meta %s\n", meta)
+	contentTypes = append(contentTypes, meta)
+	sub1 := strings.Split(meta, " ")
+	for _, key := range sub1 {
+		key = strings.TrimRight(key, ";")
+		if len(sub1) > 1 {
+			contentTypes = append(contentTypes, key)
+		}
+		sub2 := strings.Split(key, "/")
+		if len(sub2) > 1 {
+			contentTypes = append(contentTypes, sub2...)
+		}
+		sub3 := strings.Split(key, "=")
+		if len(sub3) > 1 {
+			contentTypes = append(contentTypes, sub3...)
+		}
+	}
+	return contentTypes, nil
 }
 
 func GenerateFileTypesAndHash(r io.Reader) ContentItem {
