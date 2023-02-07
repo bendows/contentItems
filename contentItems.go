@@ -103,6 +103,7 @@ func Hashandcontents(r io.Reader) ([]string, error) {
 	if err != nil {
 		return contentTypes, err
 	}
+	contentTypes = append(contentTypes, hashedReader.Sum())
 	logger.Loginfo.Printf("Read():) [%d]\n", n)
 	meta := http.DetectContentType(b.Bytes())
 	logger.Loginfo.Printf("meta %s\n", meta)
