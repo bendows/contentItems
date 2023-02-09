@@ -23,7 +23,7 @@ func CreateFile(filename, directory string) (string, *os.File) {
 	var err error
 	f, err = os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_EXCL, 0666)
 	if err == nil {
-		diskFileName = directory + "/" + filename + fext
+		diskFileName = directory + "/" + fname + fext
 		logger.Loginfo.Printf("[%s] ", diskFileName)
 		return diskFileName, f
 	}
