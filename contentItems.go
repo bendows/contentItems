@@ -34,8 +34,10 @@ func CreateFile(filename, directory string) (string, *os.File) {
 			logger.Loginfo.Printf("[%s] ", diskFileName)
 			break
 		}
+		logger.Logerror.Printf("error [%v] ", err)
 	}
 	if len(diskFileName) < 1 {
+		logger.Logerror.Printf("error [%v] ", err)
 		return "", nil
 	}
 	return diskFileName, f
