@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -15,26 +16,28 @@ import (
 )
 
 func CreateFile(filename, directory string) (string, *os.File) {
+	fext := filepath.Ext(filename)
+	fname := strings.TrimSuffix(filename, fext)
 	diskFileName := ""
 	var f *os.File
 	var err error
-	f, err = os.OpenFile(directory+"/"+filename, os.O_CREATE|os.O_EXCL, 0666)
+	f, err = os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_EXCL, 0666)
 	if err == nil {
-		diskFileName = directory + "/" + filename
+		diskFileName = directory + "/" + filename + fext
 		logger.Loginfo.Printf("[%s] ", diskFileName)
 		return diskFileName, f
 	}
 	secondName := ""
 	for i := 0; i < 100; i++ {
-		secondName = filename + "_" + strconv.Itoa(i)
-		f, err = os.OpenFile(directory+"/"+secondName, os.O_CREATE|os.O_EXCL, 0666)
+		secondName = fname + "_" + strconv.Itoa(i)
+		f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_CREATE|os.O_EXCL, 0666)
 		if err == nil {
 			filename = secondName
-			diskFileName = directory + "/" + filename
+			diskFileName = directory + "/" + secondName + fext
 			logger.Loginfo.Printf("[%s] ", diskFileName)
 			break
 		}
-		logger.Logerror.Printf("error [%v] ", err)
+		// logger.Logerror.Printf("error [%v] ", err)
 	}
 	if len(diskFileName) < 1 {
 		logger.Logerror.Printf("error [%v] ", err)
