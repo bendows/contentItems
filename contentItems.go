@@ -21,6 +21,7 @@ func CreateFile(filename, directory string) (string, *os.File) {
 	f, _ = os.OpenFile(directory+"/"+filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if err == nil {
 		diskFileName = directory + "/" + filename
+		logger.Loginfo.Printf("[%s] ", diskFileName)
 		return diskFileName, f
 	}
 	secondName := ""
@@ -30,6 +31,7 @@ func CreateFile(filename, directory string) (string, *os.File) {
 		if err == nil {
 			filename = secondName
 			diskFileName = directory + "/" + filename
+			logger.Loginfo.Printf("[%s] ", diskFileName)
 			break
 		}
 	}
