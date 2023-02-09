@@ -27,7 +27,7 @@ func CreateFile(filename, directory string) (string, *os.File) {
 	secondName := ""
 	for i := 0; i < 100; i++ {
 		secondName = filename + "_" + strconv.Itoa(i)
-		f, err = os.OpenFile(directory+"/"+secondName, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+		f, err = os.OpenFile(directory+"/"+secondName, os.O_CREATE|os.O_EXCL, 0666)
 		if err == nil {
 			filename = secondName
 			diskFileName = directory + "/" + filename
