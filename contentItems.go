@@ -21,7 +21,8 @@ func CreateFile(filename, directory string) (string, *os.File) {
 	diskFileName := ""
 	var f *os.File
 	var err error
-	f, err = os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_EXCL, 0666)
+	//  os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+	f, err = os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0666)
 	if err == nil {
 		diskFileName = directory + "/" + fname + fext
 		logger.Loginfo.Printf("[%s] ", diskFileName)
