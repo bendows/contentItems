@@ -3,6 +3,7 @@ package ContentItems
 import (
 	"bytes"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,36 +16,41 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
-func CreateFile(filename, directory string) (string, *os.File) {
+func SaveFile(filename, directory string, r io.Reader) (string, error) {
 	fext := filepath.Ext(filename)
 	fname := strings.TrimSuffix(filename, fext)
 	diskFileName := ""
-	var f *os.File
-	var err error
 	//  os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
-	f, err = os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0666)
+	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0666)
 	if err == nil {
 		diskFileName = directory + "/" + fname + fext
-		logger.Loginfo.Printf("[%s] ", diskFileName)
-		return diskFileName, f
-	}
-	secondName := ""
-	for i := 0; i < 100; i++ {
-		secondName = fname + "_" + strconv.Itoa(i)
-		f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_CREATE|os.O_EXCL, 0666)
-		if err == nil {
-			filename = secondName
-			diskFileName = directory + "/" + secondName + fext
-			logger.Loginfo.Printf("[%s] ", diskFileName)
-			break
+	} else {
+		secondName := ""
+		for i := 0; i < 100; i++ {
+			secondName = fname + "_" + strconv.Itoa(i)
+			f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_CREATE|os.O_EXCL, 0666)
+			if err == nil {
+				filename = secondName
+				diskFileName = directory + "/" + secondName + fext
+				logger.Loginfo.Printf("[%s] ", diskFileName)
+				break
+			}
 		}
-		// logger.Logerror.Printf("error [%v] ", err)
 	}
 	if len(diskFileName) < 1 {
 		logger.Logerror.Printf("error [%v] ", err)
-		return "", nil
+		return "", errors.New("empty pathname")
 	}
-	return diskFileName, f
+	b, err := io.ReadAll(r)
+	if err != nil {
+		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
+		return diskFileName, err
+	}
+	_, err = f.Write(b)
+	if err != nil {
+		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
+	}
+	return diskFileName, nil
 }
 
 func GenerateHash(r io.Reader) (string, error) {
