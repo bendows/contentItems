@@ -18,6 +18,28 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
+func CreateFile(filename string, directory string) (*os.File, string, error) {
+	fext := filepath.Ext(filename)
+	fname := strings.TrimSuffix(filename, fext)
+	diskFileName := ""
+	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+	if err == nil {
+		diskFileName = directory + "/" + fname + fext
+		return f, diskFileName, nil
+	}
+	secondName := ""
+	for i := 0; i < 100; i++ {
+		secondName = fname + "_" + strconv.Itoa(i)
+		f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+		if err == nil {
+			filename = secondName
+			diskFileName = directory + "/" + secondName + fext
+			return f, diskFileName, nil
+		}
+	}
+	return f, diskFileName, err
+}
+
 func SaveFile(filename, directory string, r io.Reader) (string, string, error) {
 	fext := filepath.Ext(filename)
 	fname := strings.TrimSuffix(filename, fext)
