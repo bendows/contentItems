@@ -3,6 +3,8 @@ package ContentItems
 import (
 	"bytes"
 	"crypto/md5"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -16,16 +18,14 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
-func SaveFile(filename, directory string, r io.Reader) (string, error) {
+func SaveFile(filename, directory string, r io.Reader) (string, string, error) {
 	fext := filepath.Ext(filename)
 	fname := strings.TrimSuffix(filename, fext)
 	diskFileName := ""
-	//  os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if err == nil {
 		diskFileName = directory + "/" + fname + fext
 	} else {
-		f.Close()
 		secondName := ""
 		for i := 0; i < 100; i++ {
 			secondName = fname + "_" + strconv.Itoa(i)
@@ -40,19 +40,21 @@ func SaveFile(filename, directory string, r io.Reader) (string, error) {
 	}
 	if len(diskFileName) < 1 {
 		logger.Logerror.Printf("error [%v] ", err)
-		return "", errors.New("empty pathname")
+		return "", "", errors.New("empty pathname")
 	}
-	b, err := io.ReadAll(r)
+	var b bytes.Buffer
+	hash := sha1.New()
+	_, err = io.Copy(&b, io.TeeReader(r, hash))
 	if err != nil {
-		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
-		return diskFileName, err
+		f.Close()
+		return diskFileName, "", err
 	}
-	_, err = f.Write(b)
+	_, err = f.Write(b.Bytes())
 	if err != nil {
 		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
 	}
 	f.Close()
-	return diskFileName, nil
+	return diskFileName, hex.EncodeToString(hash.Sum(nil)), err
 }
 
 func GenerateHash(r io.Reader) (string, error) {
