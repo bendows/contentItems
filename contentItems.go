@@ -21,10 +21,11 @@ func SaveFile(filename, directory string, r io.Reader) (string, error) {
 	fname := strings.TrimSuffix(filename, fext)
 	diskFileName := ""
 	//  os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
-	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0666)
+	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if err == nil {
 		diskFileName = directory + "/" + fname + fext
 	} else {
+		f.Close()
 		secondName := ""
 		for i := 0; i < 100; i++ {
 			secondName = fname + "_" + strconv.Itoa(i)
@@ -47,6 +48,7 @@ func SaveFile(filename, directory string, r io.Reader) (string, error) {
 		return diskFileName, err
 	}
 	_, err = f.Write(b)
+	f.Close()
 	if err != nil {
 		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
 	}
