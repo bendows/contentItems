@@ -34,7 +34,7 @@ func CreateFile(filename string, directory string) (*os.File, string, error) {
 		if err == nil {
 			filename = secondName
 			diskFileName = directory + "/" + secondName + fext
-			return f, diskFileName, nil
+			break
 		}
 	}
 	return f, diskFileName, err
