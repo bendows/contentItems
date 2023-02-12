@@ -29,7 +29,7 @@ func SaveFile(filename, directory string, r io.Reader) (string, error) {
 		secondName := ""
 		for i := 0; i < 100; i++ {
 			secondName = fname + "_" + strconv.Itoa(i)
-			f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_CREATE|os.O_EXCL, 0666)
+			f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 			if err == nil {
 				filename = secondName
 				diskFileName = directory + "/" + secondName + fext
@@ -48,10 +48,10 @@ func SaveFile(filename, directory string, r io.Reader) (string, error) {
 		return diskFileName, err
 	}
 	_, err = f.Write(b)
-	f.Close()
 	if err != nil {
 		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
 	}
+	f.Close()
 	return diskFileName, nil
 }
 
