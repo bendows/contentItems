@@ -3,7 +3,6 @@ package ContentItems
 import (
 	"bytes"
 	"crypto/md5"
-	"crypto/sha1"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -65,7 +64,7 @@ func SaveFile(filename, directory string, r io.Reader) (string, string, error) {
 		return "", "", errors.New("empty pathname")
 	}
 	var b bytes.Buffer
-	hash := sha1.New()
+	hash := md5.New()
 	_, err = io.Copy(&b, io.TeeReader(r, hash))
 	if err != nil {
 		f.Close()
