@@ -3,8 +3,6 @@ package ContentItems
 import (
 	"bytes"
 	"crypto/md5"
-	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,66 +15,83 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
-func CreateFile(filename string, directory string) (*os.File, string, error) {
+func SaveFile(r io.Reader, directory string, filename string) (path string, err error) {
 	fext := filepath.Ext(filename)
 	fname := strings.TrimSuffix(filename, fext)
 	diskFileName := ""
 	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if err == nil {
 		diskFileName = directory + "/" + fname + fext
-		return f, diskFileName, nil
+		b, err := ioutil.ReadAll(r)
+		if err != nil {
+			return diskFileName, err
+		}
+		fsize, err := f.Write(b)
+		if err == nil && fsize == len(b) {
+			return diskFileName, nil
+		}
+		return diskFileName, err
 	}
 	secondName := ""
 	for i := 0; i < 100; i++ {
 		secondName = fname + "_" + strconv.Itoa(i)
 		f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-		if err == nil {
-			filename = secondName
-			diskFileName = directory + "/" + secondName + fext
-			break
+		if err != nil {
+			continue
 		}
+		filename = secondName
+		diskFileName = directory + "/" + secondName + fext
+		b, err := ioutil.ReadAll(r)
+		if err != nil {
+			return diskFileName, err
+		}
+		fsize, err := f.Write(b)
+		if err == nil && fsize == len(b) {
+			return diskFileName, nil
+		}
+		return diskFileName, err
 	}
-	return f, diskFileName, err
+	return diskFileName, err
 }
 
-func SaveFile(filename, directory string, r io.Reader) (string, string, error) {
-	fext := filepath.Ext(filename)
-	fname := strings.TrimSuffix(filename, fext)
-	diskFileName := ""
-	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-	if err == nil {
-		diskFileName = directory + "/" + fname + fext
-	} else {
-		secondName := ""
-		for i := 0; i < 100; i++ {
-			secondName = fname + "_" + strconv.Itoa(i)
-			f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-			if err == nil {
-				filename = secondName
-				diskFileName = directory + "/" + secondName + fext
-				logger.Loginfo.Printf("[%s] ", diskFileName)
-				break
-			}
-		}
-	}
-	if len(diskFileName) < 1 {
-		logger.Logerror.Printf("error [%v] ", err)
-		return "", "", errors.New("empty pathname")
-	}
-	var b bytes.Buffer
-	hash := md5.New()
-	_, err = io.Copy(&b, io.TeeReader(r, hash))
-	if err != nil {
-		f.Close()
-		return diskFileName, "", err
-	}
-	_, err = f.Write(b.Bytes())
-	if err != nil {
-		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
-	}
-	f.Close()
-	return diskFileName, hex.EncodeToString(hash.Sum(nil)), err
-}
+// func SaveFile(filename, directory string, r io.Reader) (string, string, error) {
+// 	fext := filepath.Ext(filename)
+// 	fname := strings.TrimSuffix(filename, fext)
+// 	diskFileName := ""
+// 	f, err := os.OpenFile(directory+"/"+fname+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+// 	if err == nil {
+// 		diskFileName = directory + "/" + fname + fext
+// 	} else {
+// 		secondName := ""
+// 		for i := 0; i < 100; i++ {
+// 			secondName = fname + "_" + strconv.Itoa(i)
+// 			f, err = os.OpenFile(directory+"/"+secondName+fext, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+// 			if err == nil {
+// 				filename = secondName
+// 				diskFileName = directory + "/" + secondName + fext
+// 				logger.Loginfo.Printf("[%s] ", diskFileName)
+// 				break
+// 			}
+// 		}
+// 	}
+// 	if len(diskFileName) < 1 {
+// 		logger.Logerror.Printf("error [%v] ", err)
+// 		return "", "", errors.New("empty pathname")
+// 	}
+// 	var b bytes.Buffer
+// 	hash := md5.New()
+// 	_, err = io.Copy(&b, io.TeeReader(r, hash))
+// 	if err != nil {
+// 		f.Close()
+// 		return diskFileName, "", err
+// 	}
+// 	_, err = f.Write(b.Bytes())
+// 	if err != nil {
+// 		logger.Logerror.Printf("[%s] Error [%v]\n", diskFileName, err)
+// 	}
+// 	f.Close()
+// 	return diskFileName, hex.EncodeToString(hash.Sum(nil)), err
+// }
 
 func GenerateHash(r io.Reader) (string, error) {
 	hash := md5.New() // fast & good enough
