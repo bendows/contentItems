@@ -15,7 +15,7 @@ import (
 	logger "github.com/bendows/gologger"
 )
 
-func SaveFile(r io.Reader, directory string, filename string) (path string, err error) {
+func SaveFile(r io.Reader, directory string, filename string) (size int, path string, err error) {
 	fext := filepath.Ext(filename)
 	fname := strings.TrimSuffix(filename, fext)
 	diskFileName := ""
@@ -24,13 +24,15 @@ func SaveFile(r io.Reader, directory string, filename string) (path string, err 
 		diskFileName = directory + "/" + fname + fext
 		b, err := ioutil.ReadAll(r)
 		if err != nil {
-			return diskFileName, err
+			f.Close()
+			return 0, diskFileName, err
 		}
 		fsize, err := f.Write(b)
-		if err == nil && fsize == len(b) {
-			return diskFileName, nil
+		f.Close()
+		if err == nil {
+			return fsize, diskFileName, nil
 		}
-		return diskFileName, err
+		return fsize, diskFileName, err
 	}
 	secondName := ""
 	for i := 0; i < 100; i++ {
@@ -43,15 +45,17 @@ func SaveFile(r io.Reader, directory string, filename string) (path string, err 
 		diskFileName = directory + "/" + secondName + fext
 		b, err := ioutil.ReadAll(r)
 		if err != nil {
-			return diskFileName, err
+			f.Close()
+			return 0, diskFileName, err
 		}
 		fsize, err := f.Write(b)
-		if err == nil && fsize == len(b) {
-			return diskFileName, nil
+		f.Close()
+		if err == nil {
+			return fsize, diskFileName, nil
 		}
-		return diskFileName, err
+		return fsize, diskFileName, err
 	}
-	return diskFileName, err
+	return 0, diskFileName, err
 }
 
 // func SaveFile(filename, directory string, r io.Reader) (string, string, error) {
